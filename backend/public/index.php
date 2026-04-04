@@ -290,7 +290,7 @@ try {
                 echo json_encode(['error' => 'Failed to save image']);
                 exit;
             }
-            $imageUrl = 'uploads/' . $filename;
+            $imageUrl = $filename; // filename only, image.php adds uploads/ prefix
         }
 
         if ($id > 0) {
@@ -372,7 +372,7 @@ try {
                 echo json_encode(['error' => 'Failed to save image']);
                 exit;
             }
-            $imageUrl = 'uploads/' . $filename;
+            $imageUrl = $filename; // filename only, image.php adds uploads/ prefix
         }
 
         // Update POI

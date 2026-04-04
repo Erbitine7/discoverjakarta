@@ -8,11 +8,19 @@ if (php_sapi_name() === 'cli-server') {
     $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
     $file = __DIR__ . $uri;
 
+    // Always set CORS headers for ALL requests (including static files)
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+    // Handle preflight OPTIONS for static files too
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        http_response_code(204);
+        exit;
+    }
+
     if ($uri !== '/' && file_exists($file) && is_file($file)) {
         $mimeType = mime_content_type($file) ?: 'application/octet-stream';
-        header('Access-Control-Allow-Origin: *');
-        header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type, Authorization');
         header('Content-Type: ' . $mimeType);
         readfile($file);
         return true;
