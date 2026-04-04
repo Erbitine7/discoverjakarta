@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Local PHP DB config (copy from config.sample.php)
+/backend/config.php

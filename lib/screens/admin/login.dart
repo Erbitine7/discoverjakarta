@@ -1,27 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../auth/auth_notifier.dart';
+import '../../services/api_service.dart';
+
 class Login extends StatefulWidget {
-  const Login({super.key});
+  const Login({required this.auth, super.key});
+
+  final AuthNotifier auth;
 
   @override
-  State<Login> createState() => LoginState();
+  State<Login> createState() => _LoginState();
 }
 
-class LoginState extends State<Login> {
+class _LoginState extends State<Login> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _loading = false;
 
-  void _login() {
-    // TODO: replace with real auth
-    if (_usernameController.text == 'admin' && _passwordController.text == 'admin123') {
-      context.go('/?admin=true');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid credentials')),
+  Future<void> _login() async {
+    setState(() => _loading = true);
+    try {
+      final token = await apiService.login(
+        _usernameController.text.trim(),
+        _passwordController.text,
       );
+      await widget.auth.setToken(token);
+      if (mounted) context.go('/');
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            duration: const Duration(seconds: 12),
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not reach server. Check API URL and PHP is running.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -35,7 +66,11 @@ class LoginState extends State<Login> {
           children: [
             TextField(
               controller: _usernameController,
-              decoration: const InputDecoration(labelText: 'Username', border: OutlineInputBorder()),
+              autocorrect: false,
+              decoration: const InputDecoration(
+                labelText: 'Username',
+                border: OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -53,7 +88,10 @@ class LoginState extends State<Login> {
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(onPressed: _login, child: const Text('Login')),
+              child: ElevatedButton(
+                onPressed: _loading ? null : _login,
+                child: _loading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Login'),
+              ),
             ),
           ],
         ),
