@@ -20,7 +20,7 @@ class Home extends StatelessWidget {
         actions: [
           // Hidden-ish admin button tucked in the corner
           IconButton(
-            icon: const Icon(Icons.lock_outline, size: 18, color: Colors.grey),
+            icon: const Icon(Icons.login_outlined, size: 18, color: Colors.grey),
             onPressed: () => context.push('/admin/login'),
           ),
         ],
