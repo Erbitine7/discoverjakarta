@@ -60,9 +60,22 @@ function json_input(): array
 
 function bearer_token(): ?string
 {
-    $h = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['Authorization'] ?? '';
+    $h = (string) ($_SERVER['HTTP_AUTHORIZATION'] ?? '');
+    if ($h === '' && !empty($_SERVER['Authorization'])) {
+        $h = (string) $_SERVER['Authorization'];
+    }
+    if ($h === '' && !empty($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+        $h = (string) $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+    }
     if (preg_match('/Bearer\s+(\S+)/i', $h, $m)) {
         return $m[1];
+    }
+    // Multipart/form-data: some Apache/CGI setups strip Authorization; Flutter also sends this field.
+    if (!empty($_POST['access_token']) && is_string($_POST['access_token'])) {
+        $t = trim($_POST['access_token']);
+        if (strlen($t) === 64 && ctype_xdigit($t)) {
+            return $t;
+        }
     }
     return null;
 }
@@ -315,79 +328,6 @@ try {
         );
         $ins->execute([(int) $lr['id'], $catId, $title, $description, $address, $imageUrl ?? '']);
         echo json_encode(['id' => (int) $pdo->lastInsertId()]);
-        exit;
-    }
-
-    if ($action === 'poi' && $method === 'PUT') {
-        require_auth($pdo);
-        $id = (int) ($_POST['id'] ?? 0);
-        if ($id < 1) {
-            http_response_code(400);
-            echo json_encode(['error' => 'id required']);
-            exit;
-        }
-        $catId = (int) ($_POST['category_id'] ?? 0);
-        $title = trim((string) ($_POST['title'] ?? ''));
-        $description = trim((string) ($_POST['description'] ?? ''));
-        $address = trim((string) ($_POST['address'] ?? ''));
-
-        if ($catId < 1 || $title === '' || $description === '') {
-            http_response_code(400);
-            echo json_encode(['error' => 'category_id, title, description required']);
-            exit;
-        }
-        $cat = $pdo->prepare('SELECT id FROM categories WHERE id = ? LIMIT 1');
-        $cat->execute([$catId]);
-        if (!$cat->fetch()) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Invalid category']);
-            exit;
-        }
-
-        // Handle file upload (optional - only if a new image is provided)
-        $imageUrl = null; // null means don't update the image_url field
-        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            $file = $_FILES['image'];
-            $maxSize = 5 * 1024 * 1024; // 5MB
-            if ($file['size'] > $maxSize) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Image too large (max 5MB)']);
-                exit;
-            }
-            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-            if (!in_array($file['type'], $allowedTypes)) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Invalid image type']);
-                exit;
-            }
-            $uploadDir = __DIR__ . '/uploads/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
-            $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-            $filename = uniqid('img_', true) . '.' . $ext;
-            $path = $uploadDir . $filename;
-            if (!move_uploaded_file($file['tmp_name'], $path)) {
-                http_response_code(500);
-                echo json_encode(['error' => 'Failed to save image']);
-                exit;
-            }
-            $imageUrl = $filename; // filename only, image.php adds uploads/ prefix
-        }
-
-        // Update POI
-        if ($imageUrl !== null) {
-            $up = $pdo->prepare(
-                'UPDATE poi SET category_id = ?, title = ?, description = ?, address = ?, image_url = ? WHERE id = ?'
-            );
-            $up->execute([$catId, $title, $description, $address, $imageUrl, $id]);
-        } else {
-            $up = $pdo->prepare(
-                'UPDATE poi SET category_id = ?, title = ?, description = ?, address = ? WHERE id = ?'
-            );
-            $up->execute([$catId, $title, $description, $address, $id]);
-        }
-        echo json_encode(['ok' => true, 'affected' => $up->rowCount()]);
         exit;
     }
 

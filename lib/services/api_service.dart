@@ -176,6 +176,7 @@ class ApiService {
   }) async {
     final request = http.MultipartRequest('POST', _uri('poi'));
     request.headers.addAll(_multipartHeaders(token: token));
+    request.fields['access_token'] = token;
     request.fields['location_slug'] = locationSlug;
     request.fields['category_id'] = categoryId.toString();
     request.fields['title'] = title;
@@ -211,6 +212,7 @@ class ApiService {
   }) async {
     final request = http.MultipartRequest('POST', _uri('poi'));
     request.headers.addAll(_multipartHeaders(token: token));
+    request.fields['access_token'] = token;
     request.fields['id'] = id.toString();
     request.fields['category_id'] = categoryId.toString();
     request.fields['title'] = title;
@@ -246,12 +248,17 @@ class ApiService {
   void _throwIfBad(http.Response res) {
     if (res.statusCode >= 200 && res.statusCode < 300) return;
     try {
-      final body = jsonDecode(res.body) as Map<String, dynamic>;
-      final err = body['error'] as String? ?? 'Request failed';
-      throw ApiException(err, res.statusCode);
+      final decoded = jsonDecode(res.body);
+      if (decoded is Map<String, dynamic>) {
+        final err = decoded['error'] as String? ?? 'Request failed';
+        throw ApiException(err, res.statusCode);
+      }
+    } on ApiException {
+      rethrow;
     } catch (_) {
-      throw ApiException('Request failed (${res.statusCode})', res.statusCode);
+      // Non-JSON body
     }
+    throw ApiException('Request failed (${res.statusCode})', res.statusCode);
   }
 
   void dispose() {
