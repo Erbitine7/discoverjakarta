@@ -5,7 +5,7 @@
 --   locations   — Jakarta regions for the map / dropdown (Central, North, …).
 --   categories  — Article types (Culinary, Entertainment, …).
 --   account     — Admin users only (app login).
---   sessions    — Tokens after login (used by the PHP API for add/edit/delete).
+--   sessions    — Tokens after login (used by the Node/Express API for add/edit/delete).
 --   poi         — Point of interest / article; image_url stores a full URL or path for the cover image.
 
 SET NAMES utf8mb4;
@@ -94,8 +94,9 @@ INSERT INTO `categories` (`name`, `slug`) VALUES
   ('History', 'history');
 
 -- Default admin: username admin / password admin123 (change after first login in production)
+-- Hash generated with Node bcrypt (PHP $2y$ seed in older dumps did not match this password).
 INSERT INTO `account` (`username`, `password_hash`) VALUES
-  ('admin', '$2y$10$h209SHpPqHWewr6IHoQidO0yGOoPYUBttRZgqLTeTIEkwILrKLtCW');
+  ('admin', '$2b$10$ubxbzhTyrtSjvsRdoSEzlOn3Kwlyr1/DQp7d1ayLbbkk4zOMKhGtO');
 
 -- Sample articles (image_url can be replaced with your own URLs or uploaded file paths later)
 INSERT INTO `poi` (`location_id`, `category_id`, `title`, `description`, `address`, `image_url`) VALUES

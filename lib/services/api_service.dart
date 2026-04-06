@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../config/api_config.dart';
+import '../config/api_config.dart' show kApiBaseUrl, kApiDefaultPort;
 import '../models/article_category.dart';
 import '../models/poi.dart';
 
@@ -24,6 +24,7 @@ class ApiService {
 
   final http.Client _client;
 
+  /// Express uses the same contract as the old PHP API: `/index.php?action=...`
   Uri _uri(String action, [Map<String, String>? query]) {
     final base = kApiBaseUrl.endsWith('/') ? kApiBaseUrl.substring(0, kApiBaseUrl.length - 1) : kApiBaseUrl;
     return Uri.parse('$base/index.php').replace(queryParameters: {
@@ -49,20 +50,27 @@ class ApiService {
     return h;
   }
 
-  /// Full URL of `index.php` for error messages.
-  String get _indexUrl {
+  /// Full URL of the API base for error messages.
+  String get _apiBaseUrl {
     final base = kApiBaseUrl.endsWith('/') ? kApiBaseUrl.substring(0, kApiBaseUrl.length - 1) : kApiBaseUrl;
-    return '$base/index.php';
+    return base;
   }
 
   String _networkHelpMessage() {
-    return 'Cannot reach the API at:\n$_indexUrl\n\n'
-        '1) Start PHP from the project folder:\n'
-        '   php -S 127.0.0.1:8080 -t backend/public\n'
-        '2) Import database/discover_jakarta.sql in phpMyAdmin.\n'
-        '3) Ensure backend/config.php exists (MySQL user/password).\n'
-        '4) Android emulator: flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080\n'
-        '5) XAMPP: set API_BASE_URL to the folder URL that contains index.php.';
+    final base = kApiBaseUrl.endsWith('/') ? kApiBaseUrl.substring(0, kApiBaseUrl.length - 1) : kApiBaseUrl;
+    final emuUrl = 'http://10.0.2.2:$kApiDefaultPort';
+    final webUrl = 'http://localhost:$kApiDefaultPort';
+    return 'Cannot reach the API at:\n$_apiBaseUrl\n\n'
+        'Use the "server" folder only (not "backend").\n'
+        '1) cd server\n'
+        '   npm install\n'
+        '   npm start\n'
+        '2) In a browser open: $_apiBaseUrl/health\n'
+        '   If that fails, the API is not running or PORT is wrong.\n'
+        '   In server/.env set PORT=3001 (or change API_BASE_URL in Flutter).\n'
+        '3) Import database/discover_jakarta.sql into MySQL.\n'
+        '4) Android emulator: flutter run --dart-define=API_BASE_URL=$emuUrl\n'
+        '5) Web (note two dashes): flutter run --dart-define=API_BASE_URL=$webUrl';
   }
 
   bool _looksLikeNetworkFailure(Object e) {

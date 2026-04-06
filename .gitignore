@@ -44,5 +44,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Local PHP DB config (copy from config.sample.php)
-/backend/config.php
+# Node API
+server/node_modules/
+server/.env
+server/uploads/*
+!server/uploads/.gitkeep

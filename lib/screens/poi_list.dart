@@ -215,7 +215,7 @@ class _PoiListState extends State<PoiList> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Could not load articles.\nCheck that MySQL is running, you imported the SQL, and the PHP API URL is correct.',
+                'Could not load articles.\nCheck that MySQL is running, you imported the SQL, and the Express API URL is correct.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey[700]),
               ),

@@ -40,7 +40,7 @@ class _LoginState extends State<Login> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not reach server. Check API URL and PHP is running.')),
+          const SnackBar(content: Text('Could not reach server. Check API URL and Express server is running.')),
         );
       }
     } finally {

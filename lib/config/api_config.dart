@@ -1,16 +1,15 @@
-/// Base URL of the PHP API folder (where `index.php` is served). No trailing slash.
+/// Default API port — keep in sync with `server/.env.example` (`PORT=`) and `server/index.js` fallback.
+const int kApiDefaultPort = 3001;
+
+/// Resolved at compile time. Must match a running `server` process (see `server/` folder).
 ///
-/// **Built-in PHP server** (from the project root):
-///   `php -S 127.0.0.1:8080 -t backend/public`
-///   → use default `http://127.0.0.1:8080`
+/// **Do not** use the old `backend/` folder; run **`cd server && npm start`** only.
 ///
-/// **XAMPP/WAMP** (example): `http://localhost/discoverjakarta/backend/public`
-///
-/// **Android emulator** cannot use `127.0.0.1` for your PC; use:
-///   `flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080`
-///
-/// **Real phone** on same Wi‑Fi: use your PC’s LAN IP, e.g. `http://192.168.1.10:8080`
+/// Override when needed:
+/// - Android emulator: `--dart-define=API_BASE_URL=http://10.0.2.2:3001`
+/// - Web: `--dart-define=API_BASE_URL=http://localhost:3001`
+/// - Physical device: `--dart-define=API_BASE_URL=http://YOUR_PC_LAN_IP:3001`
 const String kApiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
-  defaultValue: 'http://127.0.0.1:8080',
+  defaultValue: 'http://127.0.0.1:$kApiDefaultPort',
 );
